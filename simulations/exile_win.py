@@ -201,7 +201,7 @@ def demonstrate_exile_win(win_data, player):
         board = apply_move(board, p, move)
         print_board_with_centre_highlight(board)
         
-        # Check center count
+        # Check centre count
         center_a = count_centre_tokens(board, "A")
         center_b = count_centre_tokens(board, "B")
         print(f"Centre control: X={center_a}, O={center_b}")
@@ -222,8 +222,8 @@ if __name__ == "__main__":
         symbol = "X" if player == "A" else "O"
         if shortest_wins[player]:
             moves = shortest_wins[player]['moves']
-            center = shortest_wins[player]['center_count']
-            print(f"Player {player} ({symbol}): {moves} moves ({center} tokens in centre)")
+            centre = shortest_wins[player]['center_count']
+            print(f"Player {player} ({symbol}): {moves} moves ({centre} tokens in centre)")
         else:
             print(f"Player {player} ({symbol}): No exile win found")
     

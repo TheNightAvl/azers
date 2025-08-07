@@ -22,7 +22,6 @@ def print_banner():
     print("Available configurations:")
     print("- Mode 1: Opposing corners start (A1 vs D4)")
     print("- Mode 2: All possible starting positions")
-    print("- Opposition rule: Additional draw condition")
     print("="*80)
 
 def main():

@@ -9,7 +9,7 @@ from collections import defaultdict
 from typing import List, Optional, Tuple, Dict, Any
 from game_engine import (
     get_legal_moves, apply_move, get_opponent, get_tokens, 
-    has_3_or_4_in_centre, check_opposition_pattern, CENTER_SQUARES
+    has_3_or_4_in_centre, CENTER_SQUARES
 )
 
 class TacticalAI:
@@ -118,7 +118,7 @@ class TacticalAI:
                             if weights[i] > 0:
                                 weights[i] += random.uniform(-noise_factor, noise_factor)
                         
-                        # Normalize weights to ensure they're positive
+                        # Normalise weights to ensure they're positive
                         min_weight = min(w for w in weights if w > 0) if any(w > 0 for w in weights) else 0
                         weights = [max(0.01, w - min_weight + 0.01) for w in weights]
                         
@@ -225,10 +225,6 @@ class TacticalAI:
         opp_win, opp_count = has_3_or_4_in_centre(board, opponent)
         if opp_win:
             return -1000  # Opponent wins
-        
-        # Check OPPOSITION pattern (draw)
-        if check_opposition_pattern(board):
-            return 0  # Draw
         
         return None  # Not terminal
     
@@ -425,7 +421,7 @@ class TacticalAI:
             # Determine outcome from this player's perspective
             if result == 'win':  # Win
                 stats['wins'] += 1
-            elif result == 'draw' or result in ['BOREDOM', 'OPPOSITION']:  # Draw
+            elif result == 'draw' or result in ['BOREDOM']:  # Draw
                 stats['draws'] += 1
             else:  # Loss (result == 'loss')
                 stats['losses'] += 1

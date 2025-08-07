@@ -14,7 +14,6 @@ The simulation suite allows you to configure:
 Each simulation can test multiple configurations:
 - **Mode 1**: Start at opposing corners (A1, D4)
 - **Mode 2**: All possible starting positions
-- **Opposition rule**: With/without additional draw condition
 
 For Mode 2, all possible starting position pairs are tested (excluding rotational/reflectional symmetries).
 
@@ -184,21 +183,14 @@ python analyse_opening_book.py
 - **Mode 2 only**: Test all possible starting positions - Most comprehensive
 - **Both modes**: Complete coverage - Full analysis
 
-### Opposition Rule Selection  
-- **With Opposition only**: Test with additional draw condition
-- **Without Opposition only**: Test standard rules
-- **Both settings**: Compare rule impact
-
 ### Performance vs Computation Trade-offs
-Users can select any combination, resulting in 1-4 test configurations:
-- **Single config** (e.g., Mode 1 without Opposition): Fastest testing
-- **Partial configs** (e.g., Mode 1 with both Opposition settings): Targeted analysis  
-- **Full configs** (Both modes + both Opposition settings): Complete analysis
+Users can select any combination, resulting in 1-2 test configurations:
+- **Single mode**: Fastest testing (Mode 1 or Mode 2 only)
+- **Both modes**: Complete analysis
 
 ### Computational Savings
 - **Mode 1 only**: ~75% faster (no Mode 2 position generation)
-- **Single Opposition setting**: 50% faster
-- **Single configuration**: ~87.5% faster than full test
+- **Single configuration**: ~50% faster than full test
 
 ### Search Depth (Tactical Only)
 - **1-3**: Very fast, weak play
@@ -316,4 +308,4 @@ Each simulation provides:
 - **5-10% bias**: Moderately biased
 - **> 10% bias**: Heavily biased
 
-The Opposition rule may significantly affect game balance by providing an additional draw condition.
+The simulation tracks various game outcome statistics and analyses potential bias between players.

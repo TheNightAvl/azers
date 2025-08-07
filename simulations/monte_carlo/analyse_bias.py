@@ -72,18 +72,7 @@ def has_3_or_4_in_centre(board, player):
     count = sum(1 for (x, y) in centre if board[y][x] == player)
     return count >= 3, count
 
-def check_opposition_pattern(board):
-    centre = [(1, 1), (2, 1), (1, 2), (2, 2)]
-    centre_tokens = {pos: board[pos[1]][pos[0]] for pos in centre}
-    if any(token is None for token in centre_tokens.values()):
-        return False
-    pattern1 = (centre_tokens[(1, 1)] == "A" and centre_tokens[(2, 1)] == "B" and
-                centre_tokens[(1, 2)] == "B" and centre_tokens[(2, 2)] == "A")
-    pattern2 = (centre_tokens[(1, 1)] == "B" and centre_tokens[(2, 1)] == "A" and
-                centre_tokens[(1, 2)] == "A" and centre_tokens[(2, 2)] == "B")
-    return pattern1 or pattern2
-
-def run_game(mode, tactical_a, tactical_b, opposition_enabled, a_pos=None, b_pos=None):
+def run_game(mode, tactical_a, tactical_b, a_pos=None, b_pos=None):
     board = create_board()
     if mode == 1:
         board[0][0] = "A"
@@ -109,8 +98,6 @@ def run_game(mode, tactical_a, tactical_b, opposition_enabled, a_pos=None, b_pos
         win, count = has_3_or_4_in_centre(board, player)
         if win:
             return player  # Exile win
-        if opposition_enabled and check_opposition_pattern(board):
-            return "Draw"  # Opposition draw
         opponent_moves = get_legal_moves(board, opponent)
         if not opponent_moves:
             return player  # Defence win
@@ -136,17 +123,17 @@ def all_valid_mode2_positions():
                     positions.append(((ax, ay), (bx, by)))
     return positions
 
-def run_mode_analysis(mode, tactical_a, tactical_b, opposition_enabled, N, positions=None):
-    """Run analysis for a specific mode and opposition setting"""
+def run_mode_analysis(mode, tactical_a, tactical_b, N, positions=None):
+    """Run analysis for a specific mode"""
     import time
     results = {"A": 0, "B": 0, "Draw": 0}
     
     if mode == 1:
         total_games = N
-        print(f"Simulating Mode 1 (opposition {'enabled' if opposition_enabled else 'disabled'}, {N} games)...")
+        print(f"Simulating Mode 1 ({N} games)...")
         start_time = time.time()
         for i in range(N):
-            outcome = run_game(1, tactical_a, tactical_b, opposition_enabled)
+            outcome = run_game(1, tactical_a, tactical_b)
             results[outcome] += 1
             elapsed = time.time() - start_time
             games_done = i + 1
@@ -162,12 +149,12 @@ def run_mode_analysis(mode, tactical_a, tactical_b, opposition_enabled, N, posit
     else:  # mode == 2
         total_to_simulate = (N // len(positions)) * len(positions)
         total_games = total_to_simulate
-        print(f"Simulating Mode 2 (opposition {'enabled' if opposition_enabled else 'disabled'}, {total_to_simulate} games)...")
+        print(f"Simulating Mode 2 ({total_to_simulate} games)...")
         start_time = time.time()
         games_done = 0
         for idx, (a_pos, b_pos) in enumerate(positions):
             for j in range(N // len(positions)):
-                outcome = run_game(2, tactical_a, tactical_b, opposition_enabled, a_pos, b_pos)
+                outcome = run_game(2, tactical_a, tactical_b, a_pos, b_pos)
                 results[outcome] += 1
                 games_done += 1
                 elapsed = time.time() - start_time
@@ -187,7 +174,6 @@ def main():
     print("Analysing Azers outcome probabilities and bias using AI (Monte Carlo simulation)")
     print("Mode 1: Opposing corners")
     print("Mode 2: All valid starting positions")
-    print("Testing both with and without opposition draw rule")
     print()
     
     # AI selection
@@ -233,23 +219,22 @@ def main():
     # Store all results for comprehensive analysis
     all_results = {}
     
-    # Run analysis for all combinations
+    # Run analysis for all modes
     for mode in [1, 2]:
-        for opposition_enabled in [False, True]:
-            key = f"Mode {mode} ({'opposition enabled' if opposition_enabled else 'opposition disabled'})"
-            if mode == 1:
-                results, total_games = run_mode_analysis(mode, tactical_a, tactical_b, opposition_enabled, N)
-            else:
-                results, total_games = run_mode_analysis(mode, tactical_a, tactical_b, opposition_enabled, N, positions)
-            
-            all_results[key] = (results, total_games)
-            
-            # Print results for this configuration
-            print(f"{key} ({total_games} games):")
-            print(f"  Player A wins: {results['A']} ({results['A']/total_games:.1%})")
-            print(f"  Player B wins: {results['B']} ({results['B']/total_games:.1%})")
-            print(f"  Draws: {results['Draw']} ({results['Draw']/total_games:.1%})")
-            print()
+        key = f"Mode {mode}"
+        if mode == 1:
+            results, total_games = run_mode_analysis(mode, tactical_a, tactical_b, N)
+        else:
+            results, total_games = run_mode_analysis(mode, tactical_a, tactical_b, N, positions)
+        
+        all_results[key] = (results, total_games)
+        
+        # Print results for this configuration
+        print(f"{key} ({total_games} games):")
+        print(f"  Player A wins: {results['A']} ({results['A']/total_games:.1%})")
+        print(f"  Player B wins: {results['B']} ({results['B']/total_games:.1%})")
+        print(f"  Draws: {results['Draw']} ({results['Draw']/total_games:.1%})")
+        print()
     
     # Comprehensive bias analysis
     print("=" * 60)
@@ -268,34 +253,6 @@ def main():
             print(f"  Assessment: Favours Player A by {bias:.1%}")
         else:
             print(f"  Assessment: Favours Player B by {abs(bias):.1%}")
-        print()
-    
-    # Compare opposition rule effects
-    print("OPPOSITION RULE IMPACT ANALYSIS")
-    print("=" * 40)
-    
-    for mode in [1, 2]:
-        disabled_key = f"Mode {mode} (opposition disabled)"
-        enabled_key = f"Mode {mode} (opposition enabled)"
-        
-        disabled_results, disabled_total = all_results[disabled_key]
-        enabled_results, enabled_total = all_results[enabled_key]
-        
-        disabled_bias = disabled_results['A']/disabled_total - disabled_results['B']/disabled_total
-        enabled_bias = enabled_results['A']/enabled_total - enabled_results['B']/enabled_total
-        bias_change = enabled_bias - disabled_bias
-        
-        disabled_draws = disabled_results['Draw']/disabled_total
-        enabled_draws = enabled_results['Draw']/enabled_total
-        draw_change = enabled_draws - disabled_draws
-        
-        print(f"Mode {mode} - Opposition rule impact:")
-        print(f"  Bias without opposition: {disabled_bias:.2%}")
-        print(f"  Bias with opposition: {enabled_bias:.2%}")
-        print(f"  Bias change: {bias_change:+.2%}")
-        print(f"  Draw rate without opposition: {disabled_draws:.1%}")
-        print(f"  Draw rate with opposition: {enabled_draws:.1%}")
-        print(f"  Draw rate change: {draw_change:+.1%}")
         print()
 
 if __name__ == "__main__":

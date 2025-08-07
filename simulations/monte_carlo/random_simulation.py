@@ -64,11 +64,10 @@ Result Types:
         
         return summary
 
-def run_simulation(name: str, board_generator, opposition_enabled: bool, num_games: int = 50000, display_boards: bool = False):
+def run_simulation(name: str, board_generator, num_games: int = 50000, display_boards: bool = False):
     """Run Monte Carlo simulation for a specific configuration"""
     print(f"\n{'='*60}")
     print(f"STARTING SIMULATION: {name}")
-    print(f"Opposition Rule: {'ENABLED' if opposition_enabled else 'DISABLED'}")
     print(f"Target Games: {num_games:,}")
     print(f"Board Display: {'ENABLED' if display_boards else 'DISABLED'}")
     print(f"{'='*60}")
@@ -107,7 +106,7 @@ def run_simulation(name: str, board_generator, opposition_enabled: bool, num_gam
                 print(f"\n--- Game {stats.total_games + 1} Starting Position (Mode 2) ---")
                 print(format_board_simple(board))
             
-            result = play_game(board, starting_player, opposition_enabled, 
+            result = play_game(board, starting_player, 
                              random_strategy, random_strategy)
             stats.add_result(result)
             
@@ -173,40 +172,12 @@ def get_configuration_selection():
         else:
             print("Please enter 1, 2, or 3.")
     
-    # Opposition rule selection
-    while True:
-        print("\nWhich Opposition rule settings do you want to test?")
-        print("1. With Opposition rule only")
-        print("2. Without Opposition rule only")
-        print("3. Both with and without Opposition rule")
-        
-        opp_choice = input("\nEnter choice (1-3): ").strip()
-        
-        if opp_choice == "1":
-            opposition_settings = [True]
-            break
-        elif opp_choice == "2":
-            opposition_settings = [False]
-            break
-        elif opp_choice == "3":
-            opposition_settings = [True, False]
-            break
-        else:
-            print("Please enter 1, 2, or 3.")
-    
     # Build configuration list
     for mode in modes:
-        for opposition in opposition_settings:
-            if mode == "mode1":
-                if opposition:
-                    configurations.append(("Mode 1 + Opposition", create_mode1_board, True))
-                else:
-                    configurations.append(("Mode 1 - Opposition", create_mode1_board, False))
-            else:  # mode2
-                if opposition:
-                    configurations.append(("Mode 2 + Opposition", "mode2_positions", True))
-                else:
-                    configurations.append(("Mode 2 - Opposition", "mode2_positions", False))
+        if mode == "mode1":
+            configurations.append(("Mode 1", create_mode1_board))
+        else:  # mode2
+            configurations.append(("Mode 2", "mode2_positions"))
     
     return configurations
 
@@ -286,7 +257,7 @@ def main():
     print("AZERS MONTE CARLO SIMULATION - RANDOM PLAY")
     print("="*80)
     print("This simulation runs random games for selected configurations:")
-    print("You can choose which modes and opposition settings to test.")
+    print("You can choose which modes to test.")
     print()
     print("Random play: Both players select moves completely at random.")
     print()
@@ -306,7 +277,7 @@ def main():
     
     # Prepare Mode 2 positions if needed
     mode2_positions = None
-    for config_name, board_gen, _ in configurations:
+    for config_name, board_gen in configurations:
         if "Mode 2" in config_name:
             if mode2_positions is None:
                 print("Generating all unique starting positions for Mode 2 (excluding symmetries)...")
@@ -315,15 +286,15 @@ def main():
             break
     
     # Run selected configurations
-    for config_name, board_generator, opposition_enabled in configurations:
+    for config_name, board_generator in configurations:
         if "Mode 2" in config_name:
             # Use pre-generated Mode 2 positions
             all_results[config_name] = run_simulation(
-                config_name, mode2_positions, opposition_enabled, num_games, display_boards)
+                config_name, mode2_positions, num_games, display_boards)
         else:
             # Mode 1
             all_results[config_name] = run_simulation(
-                config_name, board_generator, opposition_enabled, num_games, display_boards)
+                config_name, board_generator, num_games, display_boards)
     
     # Final summary
     print(f"\\n{'='*80}")

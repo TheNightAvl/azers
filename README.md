@@ -37,11 +37,6 @@ python run_simulations.py
   - **DEFENCE**: Force opponent into a position with no legal moves
 - Draw conditions:
   - **BOREDOM**: Repetitive moves detected
-  - **OPPOSITION** (optional): Centre four squares form an alternating pattern:
-    ```
-    A B    or    B A
-    B A          A B
-    ```
 
 ## Controls
 
@@ -89,7 +84,6 @@ The simulation suite provides comprehensive analysis of game balance and AI perf
 ### Configuration Options
 
 - **Game Modes**: Mode 1 (opposing corners) and/or Mode 2 (all positions)
-- **Opposition Rule**: With/without opposition draw condition
 - **Game Count**: 100 to 1,000,000 games per configuration
 - **Search Depth**: 1-15 for tactical simulations
 - **Selective Testing**: Choose specific configurations to reduce computation

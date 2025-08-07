@@ -112,36 +112,6 @@ def has_3_or_4_in_centre(board, player):
     count = sum(1 for (x, y) in CENTER_SQUARES if board[y][x] == player)
     return count >= 3, count
 
-def check_opposition_pattern(board):
-    """
-    Check if the centre four squares form an OPPOSITION pattern:
-    X O    or    O X
-    O X          X O
-    """
-    # CENTER_SQUARES = [(1, 1), (2, 1), (1, 2), (2, 2)]
-    # This corresponds to:
-    # (1,1) (2,1)
-    # (1,2) (2,2)
-    
-    # Get the tokens in the centre squares
-    centre_tokens = {}
-    for x, y in CENTER_SQUARES:
-        centre_tokens[(x, y)] = board[y][x]
-    
-    # Check if all centre squares are occupied
-    if any(token is None for token in centre_tokens.values()):
-        return False
-    
-    # Pattern 1: X O / O X
-    pattern1 = (centre_tokens[(1, 1)] == "A" and centre_tokens[(2, 1)] == "B" and
-                centre_tokens[(1, 2)] == "B" and centre_tokens[(2, 2)] == "A")
-    
-    # Pattern 2: O X / X O  
-    pattern2 = (centre_tokens[(1, 1)] == "B" and centre_tokens[(2, 1)] == "A" and
-                centre_tokens[(1, 2)] == "A" and centre_tokens[(2, 2)] == "B")
-    
-    return pattern1 or pattern2
-
 def get_legal_moves(board, player):
     moves = []
     for (x, y) in get_tokens(board, player):
@@ -253,19 +223,18 @@ def parse_position(prompt):
             pass
         print("Invalid input. Please enter as: column(A-D)row(1-4) (e.g. B2)")
 
-def create_learning_ai(depth=6, learning_games=100, randomness=0.1, book_file=None, enhancement_level="standard", learning_mode="advanced", game_mode=None, opposition_enabled=None):
+def create_learning_ai(depth=6, learning_games=100, randomness=0.1, book_file=None, enhancement_level="standard", learning_mode="advanced", game_mode=None):
     """Create a learning AI that has been trained through self-play"""
     if not AI_AVAILABLE:
         return None
         
     if book_file is None:
         # Use specialised learning books based on game context
-        if game_mode is not None and opposition_enabled is not None:
+        if game_mode is not None:
             # Use context-aware specialised books
             mode_name = "mode1" if game_mode == 1 else "mode2"
-            opposition_suffix = "with_opposition" if opposition_enabled else "without_opposition"
             learning_mode_num = {'basic': '1', 'enhanced': '2', 'advanced': '3'}[learning_mode]
-            book_file = f"specialised_{mode_name}_{opposition_suffix}_depth_{depth}_learning{learning_mode_num}.json"
+            book_file = f"specialised_{mode_name}_depth_{depth}_learning{learning_mode_num}.json"
         elif enhancement_level == "bias_optimised_mode2":
             book_file = f"enhanced_learning_book_depth_{depth}_mode2.json"
         elif enhancement_level == "bias_optimised_mode3":
@@ -291,14 +260,12 @@ def create_learning_ai(depth=6, learning_games=100, randomness=0.1, book_file=No
         print("This may take a moment...")
         
         # Create configuration for learning
-        if game_mode is not None and opposition_enabled is not None:
+        if game_mode is not None:
             # Specialised training for specific game context
             mode_choice = '1' if game_mode == 1 else '2'
-            opposition_choice = '2' if opposition_enabled else '1'
         else:
             # General training
             mode_choice = '3'  # Both modes for comprehensive training
-            opposition_choice = '3'  # Both opposition settings
             
         # Map learning mode names to numbers for learning_simulation.py
         learning_mode_map = {'basic': '1', 'enhanced': '2', 'advanced': '3'}
@@ -309,8 +276,7 @@ def create_learning_ai(depth=6, learning_games=100, randomness=0.1, book_file=No
             'evaluation_games': 0,  # We don't need evaluation for interactive play
             'search_depth': depth,
             'learning_mode': learning_mode_num,
-            'mode_choice': mode_choice,
-            'opposition_choice': opposition_choice
+            'mode_choice': mode_choice
         }
         
         # Create learning stats
@@ -322,9 +288,9 @@ def create_learning_ai(depth=6, learning_games=100, randomness=0.1, book_file=No
         # Handle both single AI and dictionary of AIs
         if isinstance(learned_ai_result, dict):
             # Multiple specialised AIs were created, pick the appropriate one
-            if game_mode is not None and opposition_enabled is not None:
+            if game_mode is not None:
                 mode_key = "mode1" if game_mode == 1 else "mode2"
-                learned_ai = learned_ai_result.get((mode_key, opposition_enabled), list(learned_ai_result.values())[0])
+                learned_ai = learned_ai_result.get(mode_key, list(learned_ai_result.values())[0])
             else:
                 learned_ai = list(learned_ai_result.values())[0]  # Pick first AI
         else:
@@ -529,20 +495,6 @@ def setup_board(mode, ai_player_a=None, ai_player_b=None, setup_choice="human"):
                 print("Player B goes first.")
                 return board, "B"
 
-def ask_opposition_rule():
-    """Ask if OPPOSITION draw rule should be enabled"""
-    print("\nOPPOSITION Draw Rule:")
-    print("This optional rule creates a draw when the centre four squares form:")
-    print("X O    or    O X")
-    print("O X          X O")
-    while True:
-        choice = input("Enable OPPOSITION draw rule? (y/n): ").strip().lower()
-        if choice in ['y', 'yes']:
-            return True
-        elif choice in ['n', 'no']:
-            return False
-        print("Please enter 'y' for yes or 'n' for no.")
-
 def get_ai_configuration():
     """Configure AI settings"""
     if not AI_AVAILABLE:
@@ -733,7 +685,7 @@ def get_mode2_setup_choice(ai_player_a, ai_player_b):
         # Both human - use original behaviour
         return "human"
 
-def create_context_aware_ai(ai_config, game_mode=None, opposition_enabled=None):
+def create_context_aware_ai(ai_config, game_mode=None):
     """Create an AI that's optimised for the specific game context"""
     if ai_config['enhancement'] in ['bias_optimised_mode2', 'bias_optimised_mode3']:
         # Use context-aware specialised books if available
@@ -743,8 +695,7 @@ def create_context_aware_ai(ai_config, game_mode=None, opposition_enabled=None):
             randomness=ai_config['randomness'],
             enhancement_level=ai_config['enhancement'],
             learning_mode=ai_config['learning_mode'],
-            game_mode=game_mode,
-            opposition_enabled=opposition_enabled
+            game_mode=game_mode
         )
     else:
         # Standard AI creation
@@ -779,13 +730,6 @@ def main():
     setup_choice = "human"  # default
     if mode == 2 and (ai_player_a or ai_player_b):
         setup_choice = get_mode2_setup_choice(ai_player_a, ai_player_b)
-    
-    # Ask about OPPOSITION rule
-    opposition_enabled = ask_opposition_rule()
-    if opposition_enabled:
-        print("OPPOSITION draw rule is ENABLED.")
-    else:
-        print("OPPOSITION draw rule is DISABLED.")
     
     # Now that we know the game context, create context-aware AIs if needed
     if ai_player_a and hasattr(ai_player_a, 'ai') and ai_player_a.ai.learning_enabled:
@@ -863,17 +807,6 @@ def main():
             print_board(board)
             winner_name = get_player_name(player, ai_player_a, ai_player_b)
             print(f"{winner_name} wins by EXILE (occupying {count} centre squares)!")
-            break
-
-        # OPPOSITION draw check (if enabled)
-        if opposition_enabled and check_opposition_pattern(board):
-            print_board(board)
-            print("Draw by OPPOSITION (centre squares form the opposition pattern)!")
-            # Update learning for both AIs if available
-            if ai_player_a and hasattr(ai_player_a, 'learn_from_game'):
-                ai_player_a.learn_from_game('draw', 'A')
-            if ai_player_b and hasattr(ai_player_b, 'learn_from_game'):
-                ai_player_b.learn_from_game('draw', 'B')
             break
 
         # DEFENCE if opponent has no legal moves

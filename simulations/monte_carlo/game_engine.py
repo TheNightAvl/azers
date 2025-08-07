@@ -21,30 +21,6 @@ def has_3_or_4_in_centre(board: List[List[Optional[str]]], player: str) -> Tuple
     count = sum(1 for (x, y) in CENTER_SQUARES if board[y][x] == player)
     return count >= 3, count
 
-def check_opposition_pattern(board: List[List[Optional[str]]]) -> bool:
-    """
-    Check if the centre four squares form an OPPOSITION pattern:
-    X O    or    O X
-    O X          X O
-    """
-    centre_tokens = {}
-    for x, y in CENTER_SQUARES:
-        centre_tokens[(x, y)] = board[y][x]
-    
-    # Check if all centre squares are occupied
-    if any(token is None for token in centre_tokens.values()):
-        return False
-    
-    # Pattern 1: X O / O X
-    pattern1 = (centre_tokens[(1, 1)] == "A" and centre_tokens[(2, 1)] == "B" and
-                centre_tokens[(1, 2)] == "B" and centre_tokens[(2, 2)] == "A")
-    
-    # Pattern 2: O X / X O  
-    pattern2 = (centre_tokens[(1, 1)] == "B" and centre_tokens[(2, 1)] == "A" and
-                centre_tokens[(1, 2)] == "A" and centre_tokens[(2, 2)] == "B")
-    
-    return pattern1 or pattern2
-
 def get_legal_moves(board: List[List[Optional[str]]], player: str) -> List[Tuple[str, Tuple[int, int], Tuple[int, int]]]:
     moves = []
     for (x, y) in get_tokens(board, player):
@@ -178,12 +154,12 @@ def rotate_90(board: List[List[Optional[str]]]) -> List[List[Optional[str]]]:
 class GameResult:
     def __init__(self, winner: Optional[str], result_type: str, move_count: int, final_board: Optional[List[List[Optional[str]]]] = None):
         self.winner = winner  # "A", "B", or None for draw
-        self.result_type = result_type  # "EXILE", "MASSACRE", "DEFENCE", "OPPOSITION", "BOREDOM"
+        self.result_type = result_type  # "EXILE", "MASSACRE", "DEFENCE", "BOREDOM"
         self.move_count = move_count
         self.final_board = final_board  # Final board state when game ended
 
 def play_game(board: List[List[Optional[str]]], starting_player: str, 
-              opposition_enabled: bool, player_a_strategy, player_b_strategy,
+              player_a_strategy, player_b_strategy,
               max_moves: int = 200) -> GameResult:
     """
     Play a complete game using the given strategies.
@@ -227,10 +203,6 @@ def play_game(board: List[List[Optional[str]]], starting_player: str,
         win, count = has_3_or_4_in_centre(current_board, current_player)
         if win:
             return GameResult(current_player, "EXILE", move_count, current_board)
-        
-        # OPPOSITION draw (if enabled)
-        if opposition_enabled and check_opposition_pattern(current_board):
-            return GameResult(None, "OPPOSITION", move_count, current_board)
         
         # BOREDOM (cycle detection)
         state = (board_to_tuple(current_board), current_player)

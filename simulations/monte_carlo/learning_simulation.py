@@ -264,7 +264,7 @@ def get_learning_configuration():
     print("This simulation trains an AI through self-play with advanced learning features:")
     print("• Pattern recogniser for tactical positions")
     print("• Progressive learning beyond opening moves")
-    print("• Opponent modeling and adaptation")
+    print("• Opponent modelling and adaptation")
     print("• Weighted position learning for critical situations")
     print()
     
@@ -348,17 +348,7 @@ def get_learning_configuration():
             break
         print("Please enter 1, 2, or 3.")
     
-    # Get opposition setting
-    print("\nOpposition rule options:")
-    print("1. Without opposition")
-    print("2. With opposition")
-    print("3. Both settings")
-    
-    while True:
-        opp_choice = input("Choose opposition setting (1-3): ").strip()
-        if opp_choice in ['1', '2', '3']:
-            break
-        print("Please enter 1, 2, or 3.")
+    # Configuration complete, proceed with training
     
     return {
         'learning_games': learning_games,
@@ -366,7 +356,6 @@ def get_learning_configuration():
         'search_depth': depth,
         'learning_mode': learning_mode,
         'mode_choice': mode_choice,
-        'opposition_choice': opp_choice,
         'enhancement_level': enhancement_level
     }
 
@@ -486,25 +475,11 @@ def run_learning_phase(config: Dict[str, Any], stats: LearningStats):
     if config['mode_choice'] in ['2', '3']:
         configurations.extend(['mode2'])
     
-    # Opposition configurations
-    opposition_settings = []
-    if config['opposition_choice'] in ['1', '3']:
-        opposition_settings.append(False)
-    if config['opposition_choice'] in ['2', '3']:
-        opposition_settings.append(True)
-    
-    # Create full configuration list
-    full_configs = []
-    for mode in configurations:
-        for opposition in opposition_settings:
-            full_configs.append((mode, opposition))
-    
     # Create separate AI instances for each configuration
     config_ais = {}
-    for mode, opposition in full_configs:
+    for mode in configurations:
         # Create specialised book filename for each configuration
-        opposition_suffix = "with_opposition" if opposition else "without_opposition"
-        book_filename = f"specialised_{mode}_{opposition_suffix}_depth_{config['search_depth']}_learning{learning_mode}.json"
+        book_filename = f"specialised_{mode}_depth_{config['search_depth']}_learning{learning_mode}.json"
         
         # Handle bias-optimised learning books
         if config.get('enhancement_level', 'standard') in ['bias_optimised_mode2', 'bias_optimised_mode3']:
@@ -515,7 +490,7 @@ def run_learning_phase(config: Dict[str, Any], stats: LearningStats):
                 book_filename = f"enhanced_learning_book_depth_{config['search_depth']}_mode3.json"
             print(f"Using bias-optimised book: {book_filename}")
         
-        print(f"Creating specialised AI for {mode.upper()} {'with' if opposition else 'without'} opposition")
+        print(f"Creating specialised AI for {mode.upper()}")
         print(f"Book file: {book_filename}")
         
         ai = create_tactical_ai(
@@ -523,18 +498,18 @@ def run_learning_phase(config: Dict[str, Any], stats: LearningStats):
             learning_enabled=True,
             opening_book_file=book_filename
         )
-        config_ais[(mode, opposition)] = ai
+        config_ais[mode] = ai
     
-    games_per_config = config['learning_games'] // len(full_configs)
+    games_per_config = config['learning_games'] // len(configurations)
     
     start_time = time.time()
     interesting_games = []  # Store interesting games for display
     
-    for config_name, opposition in full_configs:
-        print(f"\nTraining specialised AI for {config_name.upper()} {'with' if opposition else 'without'} opposition...")
+    for config_name in configurations:
+        print(f"\nTraining specialised AI for {config_name.upper()}...")
         
         # Get the specialised AI for this configuration
-        ai = config_ais[(config_name, opposition)]
+        ai = config_ais[config_name]
         
         if config_name == 'mode1':
             starting_positions = [create_mode1_board]  # Function to create Mode 1 board
@@ -558,7 +533,7 @@ def run_learning_phase(config: Dict[str, Any], stats: LearningStats):
             current_player = starting_player
             
             result = play_game(
-                initial_board, starting_player, opposition, ai, ai, max_moves=200
+                initial_board, starting_player, ai, ai, max_moves=200
             )
             
             # Enhanced learning from game with patterns and progressive learning
@@ -609,7 +584,7 @@ def run_learning_phase(config: Dict[str, Any], stats: LearningStats):
             
             # Save interesting games (draws or long games)
             if result.winner is None or result.move_count >= 30:
-                interesting_games.append((stats.learning_games, result, config_name, opposition))
+                interesting_games.append((stats.learning_games, result, config_name))
             
             # Progress update after every game
             elapsed = time.time() - start_time
@@ -646,7 +621,7 @@ def run_learning_phase(config: Dict[str, Any], stats: LearningStats):
                 if show_starting_board:
                     board_state_info += "\n" + format_board_compact(starting_board_copy, "Start")
             
-            config_display = f"{config_name.upper()} ({'opp' if opposition else 'no-opp'})"
+            config_display = f"{config_name.upper()}"
             print(f"Game {stats.learning_games:,}/{config['learning_games']:,} "
                   f"({stats.learning_games/config['learning_games']*100:.1f}%) [{config_display}] "
                   f"Winner: {result.winner or 'Draw'}, Moves: {result.move_count}, "
@@ -744,7 +719,7 @@ def run_learning_phase(config: Dict[str, Any], stats: LearningStats):
         
         # Save the specialised opening book for this configuration
         ai.save_opening_book()
-        print(f"Saved specialised book for {config_name.upper()} {'with' if opposition else 'without'} opposition")
+        print(f"Saved specialised book for {config_name.upper()}")
     
     print(f"\nLearning phase completed! Created {len(config_ais)} specialised AIs trained on {stats.learning_games:,} games.")
     
@@ -761,22 +736,20 @@ def run_learning_phase(config: Dict[str, Any], stats: LearningStats):
     
     # Show which books were created
     print(f"\nSpecialised learning books created:")
-    for (mode, opposition), ai in config_ais.items():
-        opposition_text = "with opposition" if opposition else "without opposition"
+    for mode, ai in config_ais.items():
         book_file = getattr(ai.ai, 'opening_book_file', 'unknown')
-        print(f"  {mode.upper()} {opposition_text}: {book_file}")
+        print(f"  {mode.upper()}: {book_file}")
     
     # Show interesting games from learning phase with enhanced board analysis
     if interesting_games:
         print(f"\nInteresting games from learning phase (first 5 of {len(interesting_games)}):")
-        for i, (game_num, result, config_name, opposition) in enumerate(interesting_games[:5]):
-            opp_text = "with" if opposition else "without"
+        for i, (game_num, result, config_name) in enumerate(interesting_games[:5]):
             
             # Enhanced game description
             game_desc = "Draw" if result.winner is None else f"{result.winner} wins"
             move_desc = "short" if result.move_count < 15 else "medium" if result.move_count < 25 else "long"
             
-            print(f"Game {game_num} ({config_name.upper()} {opp_text} opposition): "
+            print(f"Game {game_num} ({config_name.upper()}): "
                   f"{game_desc}, {result.move_count} moves ({move_desc}), Type: {result.result_type}")
             
             # Board state analysis if available
@@ -802,9 +775,8 @@ def run_learning_phase(config: Dict[str, Any], stats: LearningStats):
                 print()
     
     # Print final learning statistics for each AI
-    for (mode, opposition), ai in config_ais.items():
-        opposition_text = "with opposition" if opposition else "without opposition"
-        print(f"\nLearning statistics for {mode.upper()} {opposition_text}:")
+    for mode, ai in config_ais.items():
+        print(f"\nLearning statistics for {mode.upper()}:")
         if hasattr(ai, 'ai'):
             ai.ai.print_learning_stats()
     
@@ -833,26 +805,15 @@ def run_evaluation_phase(config: Dict[str, Any], learned_ai, stats: LearningStat
     if config['mode_choice'] in ['2', '3']:
         configurations.extend(['mode2'])
     
-    opposition_settings = []
-    if config['opposition_choice'] in ['1', '3']:
-        opposition_settings.append(False)
-    if config['opposition_choice'] in ['2', '3']:
-        opposition_settings.append(True)
-    
-    full_configs = []
-    for mode in configurations:
-        for opposition in opposition_settings:
-            full_configs.append((mode, opposition))
-    
-    games_per_config = config['evaluation_games'] // len(full_configs)
+    games_per_config = config['evaluation_games'] // len(configurations)
     
     start_time = time.time()
     learned_ai_wins = 0
     baseline_ai_wins = 0
     evaluation_interesting_games = []  # Store interesting evaluation games
     
-    for config_name, opposition in full_configs:
-        print(f"\nEvaluating on {config_name.upper()} {'with' if opposition else 'without'} opposition...")
+    for config_name in configurations:
+        print(f"\nEvaluating on {config_name.upper()}...")
         
         if config_name == 'mode1':
             starting_positions = [create_mode1_board]  # Function to create Mode 1 board
@@ -876,7 +837,7 @@ def run_evaluation_phase(config: Dict[str, Any], learned_ai, stats: LearningStat
             if game_num % 2 == 0:
                 # Learned AI plays A
                 result = play_game(
-                    initial_board, starting_player, opposition, learned_ai, baseline_ai, max_moves=200
+                    initial_board, starting_player, learned_ai, baseline_ai, max_moves=200
                 )
                 if result.winner == 'A':
                     learned_ai_wins += 1
@@ -889,7 +850,7 @@ def run_evaluation_phase(config: Dict[str, Any], learned_ai, stats: LearningStat
             else:
                 # Learned AI plays B
                 result = play_game(
-                    initial_board, starting_player, opposition, baseline_ai, learned_ai, max_moves=200
+                    initial_board, starting_player, baseline_ai, learned_ai, max_moves=200
                 )
                 if result.winner == 'B':
                     learned_ai_wins += 1
@@ -906,7 +867,7 @@ def run_evaluation_phase(config: Dict[str, Any], learned_ai, stats: LearningStat
             # Save interesting evaluation games (draws or long games)
             if result.winner is None or result.move_count >= 30:
                 ai_side = 'A' if game_num % 2 == 0 else 'B'
-                evaluation_interesting_games.append((stats.evaluation_games, result, config_name, opposition, ai_side))
+                evaluation_interesting_games.append((stats.evaluation_games, result, config_name, ai_side))
             
             # Progress update after every game
             elapsed = time.time() - start_time
@@ -978,15 +939,14 @@ def run_evaluation_phase(config: Dict[str, Any], learned_ai, stats: LearningStat
     # Show interesting games from evaluation phase with enhanced analysis
     if evaluation_interesting_games:
         print(f"\nInteresting games from evaluation phase (first 5 of {len(evaluation_interesting_games)}):")
-        for i, (game_num, result, config_name, opposition, ai_side) in enumerate(evaluation_interesting_games[:5]):
-            opp_text = "with" if opposition else "without"
+        for i, (game_num, result, config_name, ai_side) in enumerate(evaluation_interesting_games[:5]):
             
             # Determine outcome from AI perspective
             ai_won = (result.winner == ai_side)
             outcome_desc = "AI wins" if ai_won else "AI loses" if result.winner else "Draw"
             move_desc = "short" if result.move_count < 15 else "medium" if result.move_count < 25 else "long"
             
-            print(f"Game {game_num} ({config_name.upper()} {opp_text} opposition, Learned AI as {ai_side}): "
+            print(f"Game {game_num} ({config_name.upper()}, Learned AI as {ai_side}): "
                   f"{outcome_desc}, {result.move_count} moves ({move_desc}), Type: {result.result_type}")
             
             # Enhanced board analysis
@@ -1050,7 +1010,7 @@ def print_final_results(config: Dict[str, Any], stats: LearningStats):
     learning_mode_desc = {
         '1': 'Basic (opening book only)',
         '2': 'Enhanced (patterns + progressive learning)',
-        '3': 'Advanced (all features + opponent modeling)'
+        '3': 'Advanced (all features + opponent modelling)'
     }[config.get('learning_mode', '1')]
     print(f"  Learning mode: {learning_mode_desc}")
     print(f"  Learning games: {config['learning_games']:,}")
@@ -1135,15 +1095,8 @@ def main():
         '3': 'Both modes'
     }[config['mode_choice']]
     
-    opp_desc = {
-        '1': 'Without opposition',
-        '2': 'With opposition',
-        '3': 'Both settings'
-    }[config['opposition_choice']]
-    
     print(f"Learning mode: {learning_mode_desc}")
     print(f"Game modes: {mode_desc}")
-    print(f"Opposition: {opp_desc}")
     
     confirm = input("\nProceed with this configuration? (y/n): ").strip().lower()
     if confirm not in ['y', 'yes']:

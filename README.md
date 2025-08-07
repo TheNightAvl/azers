@@ -27,12 +27,6 @@ cd simulations/monte_carlo
 python run_simulations.py
 ```
 
-### Quick AI Performance Test
-```bash
-cd simulations/monte_carlo
-python test_ai_performance.py
-```
-
 ## Game Rules
 
 - Two players (A and B) start with one token each
@@ -103,13 +97,6 @@ The simulation suite provides comprehensive analysis of game balance and AI perf
 ### Usage Examples
 
 #### Quick Learning Test
-```bash
-cd simulations/monte_carlo
-python test_ai_performance.py
-# Tests AI vs random play with 100 games
-# Shows progress every 10 games with board states
-```
-
 #### Full Analysis
 ```bash
 cd simulations/monte_carlo
@@ -122,14 +109,6 @@ python run_simulations.py
 ```bash
 cd simulations/monte_carlo
 python analyse_opening_book.py
-```
-
-#### Test AI Performance Quickly
-```bash
-cd simulations/monte_carlo
-python test_ai_performance.py
-# Quick AI performance tests with detailed progress tracking
-# Shows board states for interesting games
 ```
 
 ## Advanced AI Learning System
@@ -279,6 +258,5 @@ Azers/
         ├── random_simulation.py    # Random play analysis
         ├── tactical_simulation.py  # Tactical play analysis
         ├── learning_simulation.py  # Enhanced AI learning system with ML features
-        ├── test_ai_performance.py  # Quick AI performance testing with progress tracking
         └── analyse_opening_book.py # Opening book analyser with pattern insights
 ```

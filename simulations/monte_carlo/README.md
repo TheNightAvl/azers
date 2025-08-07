@@ -171,25 +171,10 @@ python run_simulations.py
 # Choose option 4 for comprehensive analysis
 ```
 
-### Quick Learning Test
-```bash
-python test_ai_performance.py
-# Tests AI vs random play with 100 games
-# Shows progress every 10 games
-# Displays board states for interesting games
-```
-
 ### Analyse Learning Results
 ```bash
 python analyse_opening_book.py
 # Examine what the AI learned
-```
-
-### Test AI Performance
-```bash
-python test_ai_performance.py
-# Quick AI vs random tests with detailed progress
-# Shows board states for interesting games
 ```
 
 ## Configuration Options
@@ -234,7 +219,6 @@ Users can select any combination, resulting in 1-4 test configurations:
 - `random_simulation.py` - Random play Monte Carlo simulation with board display
 - `tactical_simulation.py` - Tactical play Monte Carlo simulation with board display
 - `learning_simulation.py` - **Enhanced AI learning system with machine learning features**
-- `test_ai_performance.py` - Quick AI testing with detailed progress tracking and visual analysis
 - `run_simulations.py` - Main interface for running simulations with enhanced board display options
 
 ## Usage
@@ -256,9 +240,6 @@ python tactical_simulation.py
 
 # Learning AI (prompts for training/evaluation games and depth)
 python learning_simulation.py
-
-# Test AI performance quickly
-python test_ai_performance.py
 ```
 
 ## Time Estimates

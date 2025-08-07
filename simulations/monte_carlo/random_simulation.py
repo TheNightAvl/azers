@@ -232,7 +232,7 @@ def get_user_parameters():
     print("CONFIGURATION SUMMARY")
     print(f"{'='*60}")
     print(f"Selected Configurations: {len(configurations)}")
-    for name, _, _ in configurations:
+    for name, _ in configurations:
         print(f"  - {name}")
     print(f"Games per Configuration: {num_games:,}")
     print(f"Total Games: {total_games:,}")

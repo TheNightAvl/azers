@@ -798,6 +798,18 @@ def run_evaluation_phase(config: Dict[str, Any], learned_ai, stats: LearningStat
         learning_enabled=False
     )
     
+    # Handle both single AI and multiple AI configurations
+    if isinstance(learned_ai, dict):
+        # Multiple AIs (one per configuration)
+        learned_ais = learned_ai
+    else:
+        # Single AI - create mapping for backward compatibility
+        learned_ais = {}
+        if config['mode_choice'] in ['1', '3']:
+            learned_ais['mode1'] = learned_ai
+        if config['mode_choice'] in ['2', '3']:
+            learned_ais['mode2'] = learned_ai
+    
     # Determine configurations to test
     configurations = []
     if config['mode_choice'] in ['1', '3']:
@@ -814,6 +826,9 @@ def run_evaluation_phase(config: Dict[str, Any], learned_ai, stats: LearningStat
     
     for config_name in configurations:
         print(f"\nEvaluating on {config_name.upper()}...")
+        
+        # Get the appropriate learned AI for this configuration
+        current_learned_ai = learned_ais[config_name]
         
         if config_name == 'mode1':
             starting_positions = [create_mode1_board]  # Function to create Mode 1 board
@@ -837,7 +852,7 @@ def run_evaluation_phase(config: Dict[str, Any], learned_ai, stats: LearningStat
             if game_num % 2 == 0:
                 # Learned AI plays A
                 result = play_game(
-                    initial_board, starting_player, learned_ai, baseline_ai, max_moves=200
+                    initial_board, starting_player, current_learned_ai, baseline_ai, max_moves=200
                 )
                 if result.winner == 'A':
                     learned_ai_wins += 1
@@ -850,7 +865,7 @@ def run_evaluation_phase(config: Dict[str, Any], learned_ai, stats: LearningStat
             else:
                 # Learned AI plays B
                 result = play_game(
-                    initial_board, starting_player, baseline_ai, learned_ai, max_moves=200
+                    initial_board, starting_player, baseline_ai, current_learned_ai, max_moves=200
                 )
                 if result.winner == 'B':
                     learned_ai_wins += 1
